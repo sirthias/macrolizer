@@ -41,7 +41,7 @@ Compile / doc / scalacOptions += "-no-link-warnings"
 sourcesInBase := false
 
 // file headers
-headerLicense := Some(HeaderLicense.MPLv2("2021", "Mathias Doenitz"))
+headerLicense := Some(HeaderLicense.MPLv2("2020 - 2021", "Mathias Doenitz"))
 
 // reformat main and test sources on compile
 scalafmtOnCompile := true
