@@ -7,14 +7,14 @@ homepage := Some(new URL("https://github.com/sirthias/macrolizer/"))
 description := "Easy inspection of Scala macro expansions"
 startYear := Some(2020)
 licenses := Seq("MPLv2" → new URL("https://www.mozilla.org/en-US/MPL/2.0/"))
-unmanagedResources in Compile += baseDirectory.value.getParentFile.getParentFile / "LICENSE"
+Compile / unmanagedResources += baseDirectory.value.getParentFile.getParentFile / "LICENSE"
 scmInfo := Some(ScmInfo(url("https://github.com/sirthias/macrolizer/"), "scm:git:git@github.com:sirthias/macrolizer.git"))
 
-scalaVersion := "2.13.1"
+scalaVersion := "2.13.5"
 
 libraryDependencies ++= Seq(
-  "org.scalameta"  %% "scalafmt-dynamic" % "2.4.2",
-  "com.lihaoyi"    %% "utest"            % "0.7.4"  % "test",
+  "org.scalameta"  %% "scalafmt-dynamic" % "2.7.5",
+  "com.lihaoyi"    %% "utest"            % "0.7.9"  % "test",
   "org.scala-lang" %  "scala-compiler"   % scalaVersion.value % "provided",
   "org.scala-lang" %  "scala-reflect"    % scalaVersion.value % "provided"
 )
@@ -35,9 +35,9 @@ scalacOptions ++= Seq(
   "-Ycache-macro-class-loader:last-modified",
 )
   
-scalacOptions in (Compile, console) ~= (_ filterNot(o => o.contains("warn") || o.contains("Xlint")))
-scalacOptions in (Test, console) := (scalacOptions in (Compile, console)).value
-scalacOptions in (Compile, doc) += "-no-link-warnings"
+Compile / console / scalacOptions ~= (_ filterNot(o => o.contains("warn") || o.contains("Xlint")))
+Test / console / scalacOptions := (Compile / console / scalacOptions).value
+Compile / doc / scalacOptions += "-no-link-warnings"
 sourcesInBase := false
 
 // file headers
