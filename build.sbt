@@ -14,9 +14,8 @@ scalaVersion := "2.13.5"
 
 libraryDependencies ++= Seq(
   "org.scalameta"  %% "scalafmt-dynamic" % "2.7.5",
-  "com.lihaoyi"    %% "utest"            % "0.7.9"  % "test",
-  "org.scala-lang" %  "scala-compiler"   % scalaVersion.value % "provided",
-  "org.scala-lang" %  "scala-reflect"    % scalaVersion.value % "provided"
+  "org.scala-lang" %  "scala-compiler"   % scalaVersion.value % Provided,
+  "org.scala-lang" %  "scala-reflect"    % scalaVersion.value % Provided
 )
 
 scalacOptions ++= Seq(
