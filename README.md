@@ -16,7 +16,7 @@ The artifacts for _macrolizer_ live on Maven Central and can be tied into your [
 
 ```scala
 libraryDependencies ++= Seq(
-  "io.bullet" %% "macrolizer" % "0.6.0" % "compile-internal"
+  "io.bullet" %% "macrolizer" % "0.6.1" % "compile-internal" // or "test-internal" or "compile-internal, test-internal"
 )
 ```
 
@@ -147,6 +147,60 @@ This will produce the following output during compilation:
 [info]       r.unexpectedDataItem("Array Start or Array Header (3) for decoding an instance of type `Color`")
 [info]   }))): Decoder[Color])
 ```
+
+Tips & Tricks
+-------------
+
+### Debugging _inside_ a macro (Scala 3.x only)
+
+If a macro generates code that doesn't type-check the compiler produces an error _before_ the `macrolizer.show` wrapper
+gets a chance to print the macro result. In this case you can wrap the final expression _inside_ of the macro
+with `macrolizer.show`, e.g. like this:
+
+```scala
+def gen(w: Expr[Writer], x: Expr[T])(using Quotes): Expr[Writer] = ...
+
+macrolizer.show {
+  '{ Encoder[T]((w, x) => ${ gen('w, 'x) }) }
+}
+```
+
+Note that this only works if you are debugging your own macro, i.e. one whose code you can simply change, and not some
+macro that's provided by a library.
+
+
+### Tweaking the scalafmt config
+
+`macrolizer` is reusing the _scalafmt_ config that your project is likely using anyway.
+In most cases that is what you want, but if you want to tweak the config just for the macrolizer output and not your
+whole project you can do that with scalafmt's `fileOverride` directive, e.g. like this:
+
+```
+runner.dialect = Scala213Source3
+
+fileOverride {
+  "glob:**/macrolizer-format.scala" { runner.dialect = scala3 }
+}
+```
+
+This would set the `runner.dialect` to `scala3` _only_ for macrolizer output. The rest of the project would remain
+on `runner.dialect = Scala213Source3`.
+
+
+### Getting around `scalafmt` crashes (Scala 3.x only)
+
+Sometimes the compiler-generated code rendering that is fed to `scalafmt` causes `scalafmt` to crash.
+(E.g. scalafmt's `RedundantParens` rewrite rule caused trouble for me.)
+In theses cases you can still get a somewhat decent macrolizer output by switching to the `ansi` renderer like this:
+
+```scala
+macrolizer.show("ansi") {
+  MapBasedCodecs.deriveDecoder[Color]
+}
+```
+
+`ansi` output is never fed through `scalafmt`.
+
 
 License
 -------

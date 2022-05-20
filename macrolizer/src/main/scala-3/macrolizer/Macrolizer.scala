@@ -28,7 +28,7 @@ object show:
    *
    * If you want to configure the output in any way use the other overload that takes a `config` String.
    */
-  inline def apply[T](expr: T): T = ${ Macro.show[T]('expr) }
+  inline def apply[T](inline expr: T): T = ${ Macro.show[T]('expr) }
 
   /**
    * Macro that logs the source code for the given argument to the console during compilation.
@@ -66,10 +66,26 @@ object show:
    */
   inline def apply[T](inline config: String)(inline expr: T): T = ${ Macro.show[T]('config, 'expr) }
 
-  object Macro:
+  /**
+   * Same as above but for use _within_ a macro definition.
+   * Useful, for example, when the macro produces code that doesn't type check and
+   * thus generates a compiler error _before_ a `macrolizer.show` wrapping the macro call site
+   * gets a chance to run.
+   */
+  def apply[T: Type](expr: Expr[T])(using Quotes): Expr[T] = Macro.show(expr)
 
-    private val WRAPPER            = "object X {%s}"
-    private val WRAPPER_PREFIX_LEN = WRAPPER.indexOf('%') + 1
+  /**
+   * Same as above but for use _within_ a macro definition.
+   * Useful, for example, when the macro produces code that doesn't type check and
+   * thus generates a compiler error _before_ a `macrolizer.show` wrapping the macro call site
+   * gets a chance to run.
+   */
+  def apply[T: Type](config: String)(expr: Expr[T])(using Quotes): Expr[T] = Macro.show(config, expr)
+
+  private[macrolizer] object Macro:
+
+    private val WRAPPER            = "object X { %s }"
+    private val WRAPPER_PREFIX_LEN = WRAPPER.indexOf('%')
 
     final private case class Config(
         scalafmtConfigFile: String = ".scalafmt.conf",
@@ -79,7 +95,11 @@ object show:
     private enum Print:
       case Code, ShortCode, AnsiCode, AST
 
-    def show[T: Type](expr: Expr[T])(using Quotes): Expr[T] = show[T](Expr(""), expr)
+    def show[T: Type](expr: Expr[T])(using Quotes): Expr[T] =
+      show[T]("", expr)
+
+    def show[T: Type](configString: String, expr: Expr[T])(using Quotes): Expr[T] =
+      show[T](Expr(configString), expr)
 
     def show[T: Type](config: Expr[String], expr: Expr[T])(using Quotes): Expr[T] = {
       import quotes.reflect.*
@@ -147,7 +167,7 @@ object show:
           val scalafmt      = Scalafmt.create(this.getClass.getClassLoader).withReporter(Reporter)
           val snippet       = config.suppress.foldLeft(rawCode)(_.replace(_, ""))
           val code          = String.format(WRAPPER, snippet)
-          val dummyFileName = Paths.get("macro_expansion.scala")
+          val dummyFileName = Paths.get("macrolizer-format.scala")
           val formattedCode = scalafmt.format(configFile, dummyFileName, code)
           val result        = formattedCode.substring(WRAPPER_PREFIX_LEN, formattedCode.length - 2)
           s"---\n$result---\n\n"
@@ -156,4 +176,5 @@ object show:
       override def parsedConfig(config: Path, scalafmtVersion: String): Unit = ()
 
   end Macro
+
 end show
