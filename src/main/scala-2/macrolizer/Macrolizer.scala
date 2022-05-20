@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 - 2021 Mathias Doenitz
+ * Copyright (c) 2020 - 2022 Mathias Doenitz
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,42 +19,42 @@ import scala.reflect.macros.blackbox
 object show {
 
   /**
-    * Macro that logs the source code for the given argument to the console during compilation.
-    * Apart from this the macro is completely transparent, i.e. doesn't change the runtime
-    * behavior of the program in any way.
-    *
-    * The source code is formatted with scalafmt before output.
-    * The scalafmt config file is expected to be present as `./.scalafmt.conf` in the current directory.
-    *
-    * If you want to configure the output in any way use the other overload that takes a `config` String.
-    */
+   * Macro that logs the source code for the given argument to the console during compilation.
+   * Apart from this the macro is completely transparent, i.e. doesn't change the runtime
+   * behavior of the program in any way.
+   *
+   * The source code is formatted with scalafmt before output.
+   * The scalafmt config file is expected to be present as `./.scalafmt.conf` in the current directory.
+   *
+   * If you want to configure the output in any way use the other overload that takes a `config` String.
+   */
   def apply[T](value: T): T = macro Macrolizer.showImpl0[T]
 
   /**
-    * Macro that logs the source code for the given argument to the console during compilation.
-    * Apart from this the macro is completely transparent, i.e. doesn't change the runtime
-    * behavior of the program in any way.
-    *
-    * The source code is formatted with scalafmt before output.
-    * The scalafmt config file is expected to be present as `./.scalafmt.conf` in the current directory.
-    * Otherwise the config file location must be configured via the `scalafmtConfigFile` setting (see below).
-    *
-    * The output is configured via the given `config` parameter, which must be a literal String.
-    * It contains a comma- or blank-separated list of the following, optional config settings:
-    *
-    *   scalafmtConfigFile=/path/to/file
-    *     Configures the location of the scalafmt config file to be used
-    *
-    *   suppress=[org.example.,java.lang.]
-    *     Specifies a comma-separated list of strings that are to be removed
-    *     from the output. Helpful, for example, for removing full qualification
-    *     of package names, which can otherwise hinder readability.
-    *
-    *   printTypes
-    *     Triggers the addition of comments containing the types inferred by the compiler.
-    *
-    * Example `config`: "scalafmtConfigFile=./sfmt.conf,printTypes"
-    */
+   * Macro that logs the source code for the given argument to the console during compilation.
+   * Apart from this the macro is completely transparent, i.e. doesn't change the runtime
+   * behavior of the program in any way.
+   *
+   * The source code is formatted with scalafmt before output.
+   * The scalafmt config file is expected to be present as `./.scalafmt.conf` in the current directory.
+   * Otherwise the config file location must be configured via the `scalafmtConfigFile` setting (see below).
+   *
+   * The output is configured via the given `config` parameter, which must be a literal String.
+   * It contains a comma- or blank-separated list of the following, optional config settings:
+   *
+   *   scalafmtConfigFile=/path/to/file
+   *     Configures the location of the scalafmt config file to be used
+   *
+   *   suppress=[org.example.,java.lang.]
+   *     Specifies a comma-separated list of strings that are to be removed
+   *     from the output. Helpful, for example, for removing full qualification
+   *     of package names, which can otherwise hinder readability.
+   *
+   *   printTypes
+   *     Triggers the addition of comments containing the types inferred by the compiler.
+   *
+   * Example `config`: "scalafmtConfigFile=./sfmt.conf,printTypes"
+   */
   def apply[T](config: String)(value: T): T = macro Macrolizer.showImpl[T]
 }
 
@@ -112,7 +112,7 @@ private object Macrolizer {
             rec(config.copy(printOwners = true), remaining, ix + "printOwners".length)
 
           case _ =>
-            c.error(confTree.pos.withPoint(confTree.pos.point + ix + 1), s"Cannot interpret config string")
+            c.error(confTree.pos.withPoint(confTree.pos.point + ix + 1), "Cannot interpret config string")
             None
         }
       } else Some(config)
@@ -122,7 +122,7 @@ private object Macrolizer {
       case Literal(Constant(x: String)) => rec(Config(), x, 0)
       case _ =>
         c.echo(NoPosition, c.universe.showRaw(confTree))
-        c.error(c.enclosingPosition, s"show configuration must passed as a single literal String")
+        c.error(c.enclosingPosition, "show configuration must passed as a single literal String")
         None
     }
   }

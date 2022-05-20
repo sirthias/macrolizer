@@ -16,14 +16,14 @@ The artifacts for _macrolizer_ live on Maven Central and can be tied into your [
 
 ```scala
 libraryDependencies ++= Seq(
-  "io.bullet" %% "macrolizer" % "0.5.0" % "compile-internal"
+  "io.bullet" %% "macrolizer" % "0.6.0" % "compile-internal"
 )
 ```
 
 The `compile-internal` scope makes sure that the library is only used during compilation and doesn't end up on your
 runtime classpath or in your project's published dependencies.
 
-_macrolizer_ is available for [Scala] 2.13.
+_macrolizer_ is available for [Scala] 2.13 and Scala 3.
 
 
 Usage
@@ -89,13 +89,19 @@ Otherwise the config file location must be configured via the `scalafmtConfigFil
 The output can be configured via a `config` parameter, which must be given as a literal String.
 It contains a comma- or blank-separated list of the following, optional config settings:
 
-| Setting Example | Description |
-| --------------- | ----------- |
-| `scalafmtConfigFile=/path/to/file` | Configures the location of the scalafmt config file to be used | 
-| `suppress=[org.example.,java.lang.]` | Specifies a comma-separated list of strings that are to be<br>removed from the output.<br>Helpful, for example, for removing full qualification of package<br>names, which can otherwise hinder readability. |
-| `printTypes` | Triggers the addition of comments containing the types inferred by the compiler. |
+| Setting Example                      | Scala Version | Description                                                                                                                                                                                                  |
+|--------------------------------------|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `scalafmtConfigFile=/path/to/file`   | 2.13 and 3.x  | Configures the location of the scalafmt config file to be used                                                                                                                                               | 
+| `suppress=[org.example.,java.lang.]` | 2.13 and 3.x  | Specifies a comma-separated list of strings that are to be<br>removed from the output.<br>Helpful, for example, for removing full qualification of package<br>names, which can otherwise hinder readability. |
+| `printTypes`                         | 2.13      | Triggers the addition of comments containing the types inferred by the compiler.                                                                                                                             |
+| `printIds`                           | 2.13      |                                                                                                                                                                                                              |
+| `printOwners`                        | 2.13      |                                                                                                                                                                                                              |
+| `code`                               | 3.x       | Prints fully elaborated version of the source code                                                                                                                                                           |
+| `short`                              | 3.x       | Same as `code` but does not print full package prefixes (**this is the default**)                                                                                                                            |
+| `ansi`                               | 3.x       | Prints fully elaborated version of the source code using ANSI colors. The result is **not** run through *scalafmt*.                                                                                          |
+| `ast`                                | 3.x       | Prints a pattern like representation of the source AST structure, formated by *scalafmt*                                                                                                                     |
 
-Here is the example from above with a custom [scalafmt] config file name and a bit less clutter:
+Here is the example from above with a custom [scalafmt] config file name and a bit less clutter (Scala 2.13):
 
 ```scala
 package org.example
