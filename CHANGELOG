@@ -1,10 +1,11 @@
 Version 0.6.0 (2022-05-20)
 --------------------------
 
-- added support for Scala 3.x
+- Added support for Scala 3.x
+- Added support for ScalaJS
 
 
 Version 0.5.0 (2020-04-08)
 --------------------------
 
-first public release
+First public release

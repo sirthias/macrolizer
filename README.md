@@ -23,7 +23,7 @@ libraryDependencies ++= Seq(
 The `compile-internal` scope makes sure that the library is only used during compilation and doesn't end up on your
 runtime classpath or in your project's published dependencies.
 
-_macrolizer_ is available for [Scala] 2.13 and Scala 3.
+_macrolizer_ is available for [Scala] 2.13 and Scala 3, both on the JVM and [Scala.js](https://www.scala-js.org/).
 
 
 Usage
