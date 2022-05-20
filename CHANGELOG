@@ -1,3 +1,10 @@
+Version 0.6.1 (2022-05-20)
+--------------------------
+
+- Added support for printing expressions _inside_ of macros (Scala 3.x only)
+- Bug fixes and improved documentation
+
+
 Version 0.6.0 (2022-05-20)
 --------------------------
 
