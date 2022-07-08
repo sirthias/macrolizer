@@ -23,7 +23,7 @@ lazy val commonSettings = Seq(
   scalaVersion := "3.1.2",
   crossScalaVersions := Seq("2.13.8", "3.1.2"),
 
-  libraryDependencies += ("org.scalameta"  %% "scalafmt-dynamic" % "3.5.4").cross(CrossVersion.for3Use2_13),
+  libraryDependencies += ("org.scalameta"  %% "scalafmt-dynamic" % "3.5.8").cross(CrossVersion.for3Use2_13),
   libraryDependencies ++= {
     if (CrossVersion.partialVersion(scalaVersion.value).get._1 == 2) {
       Seq(
