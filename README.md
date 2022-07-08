@@ -16,7 +16,7 @@ The artifacts for _macrolizer_ live on Maven Central and can be tied into your [
 
 ```scala
 libraryDependencies ++= Seq(
-  "io.bullet" %% "macrolizer" % "0.6.1" % "compile-internal" // or "test-internal" or "compile-internal, test-internal"
+  "io.bullet" %% "macrolizer" % "0.6.2" % "compile-internal" // or "test-internal" or "compile-internal, test-internal"
 )
 ```
 

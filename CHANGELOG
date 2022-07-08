@@ -1,3 +1,10 @@
+Version 0.6.2 (2022-07-08)
+--------------------------
+
+- Enable filter strings containing brackets
+- Upgrade to latest scalafmt
+
+
 Version 0.6.1 (2022-05-20)
 --------------------------
 
