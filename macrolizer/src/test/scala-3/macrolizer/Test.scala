@@ -38,4 +38,12 @@ object Test {
     } else System.exit(0)
   }
 
+  show("filter=[Option[Int]]") {
+    val x: Option[Int] = None
+  }
+
+  show("filter=[Option[Option[Int]]]") {
+    val y: Option[Int] = None
+  }
+
 }

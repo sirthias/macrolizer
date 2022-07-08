@@ -89,7 +89,8 @@ object show:
 
     final private case class Config(
         scalafmtConfigFile: String = ".scalafmt.conf",
-        suppress: Array[String] = new Array[String](0),
+        suppress: Array[String] = Array.empty[String],
+        filter: Array[String] = Array.empty[String],
         print: Print = Print.ShortCode)
 
     private enum Print:
@@ -103,7 +104,6 @@ object show:
 
     def show[T: Type](config: Expr[String], expr: Expr[T])(using Quotes): Expr[T] = {
       import quotes.reflect.*
-
       val setup =
         for {
           string        <- Expr.unapply(config).toRight("show configuration must passed as a single literal String")
@@ -121,56 +121,74 @@ object show:
             case Print.AnsiCode  => Printer.TreeAnsiCode
             case Print.AST       => Printer.TreeStructure
           }
-          report.info(render(effectiveConf, configFile, expr.asTerm.show(using printer)))
+          render(effectiveConf, configFile, expr.asTerm.show(using printer)).foreach(report.info)
       }
 
       expr
     }
 
     @tailrec
-    private def extractConf(remaining: String, config: Config = Config(), ix: Int = 0): Option[Config] =
-      if (ix < remaining.length) {
-        remaining.charAt(ix) match {
-          case ' ' | ',' => extractConf(remaining, config, ix + 1)
+    private def extractConf(string: String, config: Config = Config(), ix: Int = 0): Option[Config] =
+      if (ix < string.length) {
 
-          case _ if remaining.startsWith("scalafmtConfigFile=", ix) =>
+        @tailrec
+        def extractStringList(start: Int, end: Int, bracketLevel: Int): (Array[String], Int) =
+          if (end < string.length) {
+            string.charAt(end) match {
+              case ']' if bracketLevel == 0 => string.substring(start, end).split(',').map(_.trim) -> (end + 1)
+              case '['                      => extractStringList(start, end + 1, bracketLevel + 1)
+              case ']'                      => extractStringList(start, end + 1, bracketLevel - 1)
+              case _                        => extractStringList(start, end + 1, bracketLevel)
+            }
+          } else Array.empty[String] -> (start - 1) // malformed config string
+
+        string.charAt(ix) match {
+          case ' ' | ',' => extractConf(string, config, ix + 1)
+
+          case _ if string.startsWith("scalafmtConfigFile=", ix) =>
             val j        = ix + "scalafmtConfigFile=".length
-            val filename = remaining.drop(j).takeWhile(_ != ',')
-            extractConf(remaining, config.copy(scalafmtConfigFile = filename), j + filename.length)
+            val filename = string.drop(j).takeWhile(_ != ',')
+            extractConf(string, config.copy(scalafmtConfigFile = filename), j + filename.length)
 
-          case _ if remaining.startsWith("suppress=[", ix) =>
-            val j        = ix + "suppress=[".length
-            val snip     = remaining.drop(j).takeWhile(_ != ']')
-            val suppress = snip.split(',').map(_.trim)
-            extractConf(remaining, config.copy(suppress = suppress), j + snip.length + 1)
+          case _ if string.startsWith("suppress=[", ix) =>
+            val j                 = ix + "suppress=[".length
+            val (suppress, newIx) = extractStringList(j, j + 1, 0)
+            extractConf(string, config.copy(suppress = suppress), newIx)
 
-          case _ if remaining.startsWith("code", ix) =>
-            extractConf(remaining, config.copy(print = Print.Code), ix + "code".length)
+          case _ if string.startsWith("filter=[", ix) =>
+            val j               = ix + "filter=[".length
+            val (filter, newIx) = extractStringList(j, j + 1, 0)
+            extractConf(string, config.copy(filter = filter), newIx)
 
-          case _ if remaining.startsWith("short", ix) =>
-            extractConf(remaining, config.copy(print = Print.ShortCode), ix + "short".length)
+          case _ if string.startsWith("code", ix) =>
+            extractConf(string, config.copy(print = Print.Code), ix + "code".length)
 
-          case _ if remaining.startsWith("ansi", ix) =>
-            extractConf(remaining, config.copy(print = Print.AnsiCode), ix + "ansi".length)
+          case _ if string.startsWith("short", ix) =>
+            extractConf(string, config.copy(print = Print.ShortCode), ix + "short".length)
 
-          case _ if remaining.startsWith("ast", ix) =>
-            extractConf(remaining, config.copy(print = Print.AST), ix + "ast".length)
+          case _ if string.startsWith("ansi", ix) =>
+            extractConf(string, config.copy(print = Print.AnsiCode), ix + "ansi".length)
+
+          case _ if string.startsWith("ast", ix) =>
+            extractConf(string, config.copy(print = Print.AST), ix + "ast".length)
 
           case _ => None
         }
       } else Some(config)
 
-    private def render(config: Config, configFile: Path, rawCode: String): String =
-      config.print match
-        case Print.AnsiCode => s"---\n$rawCode\n---\n\n"
-        case _ =>
-          val scalafmt      = Scalafmt.create(this.getClass.getClassLoader).withReporter(Reporter)
-          val snippet       = config.suppress.foldLeft(rawCode)(_.replace(_, ""))
-          val code          = String.format(WRAPPER, snippet)
-          val dummyFileName = Paths.get("macrolizer-format.scala")
-          val formattedCode = scalafmt.format(configFile, dummyFileName, code)
-          val result        = formattedCode.substring(WRAPPER_PREFIX_LEN, formattedCode.length - 2)
-          s"---\n$result---\n\n"
+    private def render(config: Config, configFile: Path, rawCode: String): Option[String] =
+      Option.when(config.filter.isEmpty || config.filter.exists(rawCode.contains)) {
+        config.print match
+          case Print.AnsiCode => s"---\n$rawCode\n---\n\n"
+          case _ =>
+            val scalafmt      = Scalafmt.create(this.getClass.getClassLoader).withReporter(Reporter)
+            val snippet       = config.suppress.foldLeft(rawCode)(_.replace(_, ""))
+            val code          = String.format(WRAPPER, snippet)
+            val dummyFileName = Paths.get("macrolizer-format.scala")
+            val formattedCode = scalafmt.format(configFile, dummyFileName, code)
+            val result        = formattedCode.substring(WRAPPER_PREFIX_LEN, formattedCode.length - 2)
+            s"---\n$result---\n\n"
+      }
 
     private object Reporter extends ConsoleScalafmtReporter(System.err):
       override def parsedConfig(config: Path, scalafmtVersion: String): Unit = ()
